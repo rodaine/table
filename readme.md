@@ -57,4 +57,4 @@ Please feel free to submit an [issue](https://github.com/rodaine/table/issues) o
 
 ## License
 
-Keys is released under the MIT License (Expat). See the [full license](https://github.com/rodaine/table/blob/master/license).
+table is released under the MIT License (Expat). See the [full license](https://github.com/rodaine/table/blob/master/license).
