@@ -33,13 +33,13 @@ func TestTable_New(t *testing.T) {
 	assert.Empty(t, strings.TrimSpace(out))
 }
 
-func TestTable_WithHeaderColumnFormatter(t *testing.T) {
+func TestTable_WithHeaderFormatter(t *testing.T) {
 	uppercase := func(f string, v ...interface{}) string {
 		return strings.ToUpper(fmt.Sprintf(f, v...))
 	}
 	buf := bytes.Buffer{}
 
-	tbl := New("foo", "bar").WithWriter(&buf).WithHeaderColumnFormatter(uppercase)
+	tbl := New("foo", "bar").WithWriter(&buf).WithHeaderFormatter(uppercase)
 	tbl.Print()
 	out := buf.String()
 
@@ -47,7 +47,7 @@ func TestTable_WithHeaderColumnFormatter(t *testing.T) {
 	assert.Contains(t, out, "BAR")
 
 	buf.Reset()
-	tbl.WithHeaderColumnFormatter(nil).Print()
+	tbl.WithHeaderFormatter(nil).Print()
 	out = buf.String()
 
 	assert.Contains(t, out, "foo")
