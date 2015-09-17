@@ -4,6 +4,8 @@
 // Columns are left-aligned and padded to accomodate the largest cell in that
 // column.
 //
+// Source: https://github.com/rodaine/table
+//
 //   table.DefaultHeaderFormatter = func(format string, vals ...interface{}) string {
 //     return strings.ToUpper(fmt.Sprintf(format, vals...))
 //   }
@@ -201,7 +203,7 @@ func (t *table) printRow(format string, row []string) {
 	vals := applyWidths(row, t.widths)
 
 	if t.FirstColumnFormatter != nil {
-		vals[0] = t.FirstColumnFormatter("%s", row[0])
+		vals[0] = t.FirstColumnFormatter("%s", vals[0])
 	}
 
 	fmt.Fprintf(t.Writer, format, vals...)

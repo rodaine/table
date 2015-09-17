@@ -1,3 +1,8 @@
 sudo: false
 language: go
 go: 1.5
+
+script:
+  - gofmt -l .
+  - go tool vet -test .
+  - go test -v -cover ./...
