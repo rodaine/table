@@ -2,9 +2,13 @@ sudo: false
 language: go
 go: 1.5
 
+cache:
+  directories:
+    - $GOPATH
+
 install:
   - go get -t ./...
-  - go get -u github.com/golang/lint/golint
+  - which golint || go get github.com/golang/lint/golint
 
 script:
   - gofmt -l .
