@@ -34,7 +34,7 @@ import (
 
 var (
 	// DefaultPadding specifies the number of spaces between columns in a table.
-	DefaultPadding int = 2
+	DefaultPadding = 2
 
 	// DefaultWriter specifies the output io.Writer for the Table.Print method.
 	DefaultWriter io.Writer = os.Stdout
@@ -42,7 +42,7 @@ var (
 	// DefaultHeaderFormatter specifies the default Formatter for the table header.
 	DefaultHeaderFormatter Formatter
 
-	// DefaultHeaderFormatter specifies the default Formatter for the first column cells.
+	// DefaultFirstColumnFormatter specifies the default Formatter for the first column cells.
 	DefaultFirstColumnFormatter Formatter
 )
 
