@@ -76,7 +76,7 @@ type Formatter func(string, ...interface{}) string
 // to DefaultPadding. Padding values less than or equal to zero apply no extra
 // padding between the columns.
 //
-//   New("foo", "bar").tbl.WithPadding(3)
+//   New("foo", "bar").WithPadding(3)
 //
 // WithWriter modifies the writer which Print outputs to, defaulting to DefaultWriter
 // when instantiated. If nil is passed, os.Stdout will be used.
