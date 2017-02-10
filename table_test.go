@@ -122,6 +122,17 @@ func TestTable_WithWriter(t *testing.T) {
 	assert.NotEmpty(t, out)
 }
 
+func TestTable_handlesUTF8(t *testing.T) {
+	buf := bytes.Buffer{}
+	tbl := New("header1", "header2").WithWriter(&buf).WithPadding(2)
+	tbl.AddRow("fizz", "buzz")
+	tbl.AddRow("求z", "buzz")
+	tbl.Print()
+	out := buf.String()
+
+	assert.Contains(t, out, "求z      buzz")
+}
+
 func TestTable_AddRow(t *testing.T) {
 	buf := bytes.Buffer{}
 	tbl := New("foo", "bar").WithWriter(&buf).AddRow("fizz", "buzz")
