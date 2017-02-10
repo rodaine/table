@@ -29,7 +29,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
+
+	runewidth "github.com/mattn/go-runewidth"
 )
 
 var (
@@ -213,14 +216,14 @@ func (t *table) calculateWidths() {
 	t.widths = make([]int, len(t.header))
 	for _, row := range t.rows {
 		for i, v := range row {
-			if w := len(v) + t.Padding; w > t.widths[i] {
+			if w := displayWidth(v) + t.Padding; w > t.widths[i] {
 				t.widths[i] = w
 			}
 		}
 	}
 
 	for i, v := range t.header {
-		if w := len(v) + t.Padding; w > t.widths[i] {
+		if w := displayWidth(v) + t.Padding; w > t.widths[i] {
 			t.widths[i] = w
 		}
 	}
@@ -235,9 +238,16 @@ func applyWidths(row []string, widths []int) []interface{} {
 }
 
 func lenOffset(s string, w int) string {
-	l := w - len(s)
+	l := w - displayWidth(s)
 	if l <= 0 {
 		return ""
 	}
 	return strings.Repeat(" ", l)
+}
+
+var ansi = regexp.MustCompile("\033\\[(?:[0-9]{1,3}(?:;[0-9]{1,3})*)?[m|K]")
+
+// return the width as displayed, ignoring ansi codes
+func displayWidth(str string) int {
+	return runewidth.StringWidth(ansi.ReplaceAllLiteralString(str, ""))
 }
