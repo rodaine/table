@@ -12,6 +12,7 @@ Package table provides a convenient way to generate tabular output of any data, 
 - The printed output can be sent to any `io.Writer`, defaulting to `os.Stdout`.
 - Built to an interface, so you can roll your own `Table` implementation.
 - Works well with ANSI colors ([fatih/color](https://github.com/fatih/color) in the example)!
+- Can provide a custom `WidthFunc` to accomodate multi- and zero-width characters (such as [runewidth](https://github.com/mattn/go-runewidth))
 
 ## Usage
 

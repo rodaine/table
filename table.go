@@ -30,8 +30,11 @@ import (
 	"io"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
+// These are the default properties for all Tables created from this package
+// and can be modified.
 var (
 	// DefaultPadding specifies the number of spaces between columns in a table.
 	DefaultPadding = 2
@@ -44,6 +47,9 @@ var (
 
 	// DefaultFirstColumnFormatter specifies the default Formatter for the first column cells.
 	DefaultFirstColumnFormatter Formatter
+
+	// DefaultWidthFunc specifies the default WidthFunc for calculating column widths
+	DefaultWidthFunc WidthFunc = utf8.RuneCountInString
 )
 
 // Formatter functions expose a fmt.Sprintf signature that can be used to modify
@@ -60,6 +66,12 @@ var (
 // for a nicer interface. The package color (https://github.com/fatih/color) makes
 // it easy to generate these automatically: http://godoc.org/github.com/fatih/color#Color.SprintfFunc
 type Formatter func(string, ...interface{}) string
+
+// A WidthFunc calculates the width of a string. By default, the number of runes
+// is used but this may not be appropriate for certain character sets. The
+// package runewidth (https://github.com/mattn/go-runewidth) could be used to
+// accomodate multi-cell characters (such as emoji or CJK characters).
+type WidthFunc func(string) int
 
 // Table describes the interface for building up a tabular representation of data.
 // It exposes fluent/chainable methods for convenient table building.
@@ -83,6 +95,9 @@ type Formatter func(string, ...interface{}) string
 //
 //   New("foo", "bar").WithWriter(os.Stderr)
 //
+// WithWidthFunc sets the function used to calculate the width of the string in
+// a column. By default, the number of utf8 runes in the string is used.
+//
 // AddRow adds another row of data to the table. Any values can be passed in and
 // will be output as its string representation as described in the fmt standard
 // package. Rows can have less cells than the total number of columns in the table;
@@ -105,6 +120,7 @@ type Table interface {
 	WithFirstColumnFormatter(f Formatter) Table
 	WithPadding(p int) Table
 	WithWriter(w io.Writer) Table
+	WithWidthFunc(f WidthFunc) Table
 
 	AddRow(vals ...interface{}) Table
 	Print()
@@ -115,10 +131,12 @@ type Table interface {
 // are set on the instance.
 func New(columnHeaders ...interface{}) Table {
 	t := table{header: make([]string, len(columnHeaders))}
+
 	t.WithPadding(DefaultPadding)
 	t.WithWriter(DefaultWriter)
 	t.WithHeaderFormatter(DefaultHeaderFormatter)
 	t.WithFirstColumnFormatter(DefaultFirstColumnFormatter)
+	t.WithWidthFunc(DefaultWidthFunc)
 
 	for i, col := range columnHeaders {
 		t.header[i] = fmt.Sprint(col)
@@ -132,6 +150,7 @@ type table struct {
 	HeaderFormatter      Formatter
 	Padding              int
 	Writer               io.Writer
+	Width                WidthFunc
 
 	header []string
 	rows   [][]string
@@ -166,6 +185,11 @@ func (t *table) WithWriter(w io.Writer) Table {
 	return t
 }
 
+func (t *table) WithWidthFunc(f WidthFunc) Table {
+	t.Width = f
+	return t
+}
+
 func (t *table) AddRow(vals ...interface{}) Table {
 	row := make([]string, len(t.header))
 	for i, val := range vals {
@@ -190,7 +214,7 @@ func (t *table) Print() {
 }
 
 func (t *table) printHeader(format string) {
-	vals := applyWidths(t.header, t.widths)
+	vals := t.applyWidths(t.header, t.widths)
 	if t.HeaderFormatter != nil {
 		txt := t.HeaderFormatter(format, vals...)
 		fmt.Fprint(t.Writer, txt)
@@ -200,7 +224,7 @@ func (t *table) printHeader(format string) {
 }
 
 func (t *table) printRow(format string, row []string) {
-	vals := applyWidths(row, t.widths)
+	vals := t.applyWidths(row, t.widths)
 
 	if t.FirstColumnFormatter != nil {
 		vals[0] = t.FirstColumnFormatter("%s", vals[0])
@@ -213,29 +237,29 @@ func (t *table) calculateWidths() {
 	t.widths = make([]int, len(t.header))
 	for _, row := range t.rows {
 		for i, v := range row {
-			if w := len(v) + t.Padding; w > t.widths[i] {
+			if w := t.Width(v) + t.Padding; w > t.widths[i] {
 				t.widths[i] = w
 			}
 		}
 	}
 
 	for i, v := range t.header {
-		if w := len(v) + t.Padding; w > t.widths[i] {
+		if w := t.Width(v) + t.Padding; w > t.widths[i] {
 			t.widths[i] = w
 		}
 	}
 }
 
-func applyWidths(row []string, widths []int) []interface{} {
+func (t *table) applyWidths(row []string, widths []int) []interface{} {
 	out := make([]interface{}, len(row))
 	for i, s := range row {
-		out[i] = s + lenOffset(s, widths[i])
+		out[i] = s + t.lenOffset(s, widths[i])
 	}
 	return out
 }
 
-func lenOffset(s string, w int) string {
-	l := w - len(s)
+func (t *table) lenOffset(s string, w int) string {
+	l := w - t.Width(s)
 	if l <= 0 {
 		return ""
 	}
