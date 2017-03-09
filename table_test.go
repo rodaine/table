@@ -8,10 +8,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFormatter(t *testing.T) {
+	t.Parallel()
+
 	var formatter Formatter
 
 	fn := func(a string, b ...interface{}) string { return "" }
@@ -21,6 +24,8 @@ func TestFormatter(t *testing.T) {
 }
 
 func TestTable_New(t *testing.T) {
+	t.Parallel()
+
 	buf := bytes.Buffer{}
 	New("foo", "bar").WithWriter(&buf).Print()
 	out := buf.String()
@@ -36,6 +41,8 @@ func TestTable_New(t *testing.T) {
 }
 
 func TestTable_WithHeaderFormatter(t *testing.T) {
+	t.Parallel()
+
 	uppercase := func(f string, v ...interface{}) string {
 		return strings.ToUpper(fmt.Sprintf(f, v...))
 	}
@@ -57,6 +64,8 @@ func TestTable_WithHeaderFormatter(t *testing.T) {
 }
 
 func TestTable_WithFirstColumnFormatter(t *testing.T) {
+	t.Parallel()
+
 	uppercase := func(f string, v ...interface{}) string {
 		return strings.ToUpper(fmt.Sprintf(f, v...))
 	}
@@ -81,6 +90,8 @@ func TestTable_WithFirstColumnFormatter(t *testing.T) {
 }
 
 func TestTable_WithPadding(t *testing.T) {
+	t.Parallel()
+
 	// zero value
 	buf := bytes.Buffer{}
 	tbl := New("foo", "bar").WithWriter(&buf).WithPadding(0)
@@ -102,6 +113,8 @@ func TestTable_WithPadding(t *testing.T) {
 }
 
 func TestTable_WithWriter(t *testing.T) {
+	t.Parallel()
+
 	// not that we haven't been using it in all these tests but:
 	buf := bytes.Buffer{}
 	New("foo", "bar").WithWriter(&buf).Print()
@@ -123,6 +136,8 @@ func TestTable_WithWriter(t *testing.T) {
 }
 
 func TestTable_AddRow(t *testing.T) {
+	t.Parallel()
+
 	buf := bytes.Buffer{}
 	tbl := New("foo", "bar").WithWriter(&buf).AddRow("fizz", "buzz")
 	tbl.Print()
@@ -145,4 +160,22 @@ func TestTable_AddRow(t *testing.T) {
 	buf.Reset()
 	tbl.AddRow("bippity", "boppity", "boo").Print()
 	assert.NotContains(t, buf.String(), "boo")
+}
+
+func TestTable_WithWidthFunc(t *testing.T) {
+	t.Parallel()
+
+	buf := bytes.Buffer{}
+
+	New("", "").
+		WithWriter(&buf).
+		WithPadding(1).
+		WithWidthFunc(runewidth.StringWidth).
+		AddRow("请求", "alpha").
+		AddRow("abc", "beta").
+		Print()
+
+	actual := buf.String()
+	assert.Contains(t, actual, "请求 alpha")
+	assert.Contains(t, actual, "abc  beta")
 }
