@@ -6,5 +6,5 @@ branches:
   only:
     - master
 
-install: go get -t ./... github.com/golang/lint/golint
+install: go get -t ./... golang.org/x/lint/golint
 script: make lint test
