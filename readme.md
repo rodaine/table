@@ -19,7 +19,7 @@ Package table provides a convenient way to generate tabular output of any data, 
 **Download the package:**
 
 ```sh
-go get -u github.com/rodaine/table
+go get github.com/rodaine/table
 ```
 
 **Example:**
@@ -51,10 +51,6 @@ func main() {
 ```
 
 _Consult the [documentation](https://godoc.org/github.com/rodaine/table) for further examples and usage information_
-
-## Contributing
-
-Please feel free to submit an [issue](https://github.com/rodaine/table/issues) or [PR](https://github.com/rodaine/table/pulls) to this repository for features or bugs. All submitted code must pass the scripts specified within [.travis.yml](https://github.com/rodaine/table/blob/master/.travis.yml) and should include tests to back up the changes.
 
 ## License
 

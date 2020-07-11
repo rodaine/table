@@ -206,7 +206,7 @@ func (t *table) AddRow(vals ...interface{}) Table {
 func (t *table) Print() {
 	format := strings.Repeat("%s", len(t.header)) + "\n"
 	t.calculateWidths()
-	fmt.Fprintln(t.Writer)
+
 	t.printHeader(format)
 	for _, row := range t.rows {
 		t.printRow(format, row)
