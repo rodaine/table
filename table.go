@@ -123,6 +123,7 @@ type Table interface {
 	WithWidthFunc(f WidthFunc) Table
 
 	AddRow(vals ...interface{}) Table
+	SetRows(rows [][]string) Table
 	Print()
 }
 
@@ -200,6 +201,11 @@ func (t *table) AddRow(vals ...interface{}) Table {
 	}
 	t.rows = append(t.rows, row)
 
+	return t
+}
+
+func (t *table) SetRows(rows [][]string) Table {
+	t.rows = rows
 	return t
 }
 
