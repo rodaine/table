@@ -205,7 +205,17 @@ func (t *table) AddRow(vals ...interface{}) Table {
 }
 
 func (t *table) SetRows(rows [][]string) Table {
-	t.rows = rows
+	t.rows = [][]string{}
+
+	for _, row := range rows {
+		headerLength := len(t.header)
+		if len(row) > headerLength {
+			t.rows = append(t.rows, row[:headerLength])
+		} else {
+			t.rows = append(t.rows, row)
+		}
+	}
+
 	return t
 }
 
