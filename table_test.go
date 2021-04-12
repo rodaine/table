@@ -162,6 +162,41 @@ func TestTable_AddRow(t *testing.T) {
 	assert.NotContains(t, buf.String(), "boo")
 }
 
+func TestTable_SetRows(t *testing.T) {
+	t.Parallel()
+
+	buf := bytes.Buffer{}
+	tbl := New("foo", "bar").WithWriter(&buf).SetRows([][]string{
+		{"fizz", "buzz"},
+		{"lorem", "ipsum"},
+	})
+	tbl.Print()
+	out := buf.String()
+	assert.Contains(t, out, "fizz")
+	assert.Contains(t, out, "buzz")
+	assert.Contains(t, out, "lorem")
+	assert.Contains(t, out, "ipsum")
+	assert.Equal(t, 3, strings.Count(out, "\n"))
+
+	// empty should remove all rows
+	buf.Reset()
+	tbl.SetRows([][]string{}).Print()
+	assert.Equal(t, 1, strings.Count(buf.String(), "\n"))
+
+	// less than one will fill left-to-right
+	buf.Reset()
+	tbl.SetRows([][]string{{"cat"}}).Print()
+	assert.Contains(t, buf.String(), "\ncat")
+
+	// more than initial length are truncated
+	buf.Reset()
+	tbl.SetRows([][]string{
+		{"lorem", "ipsum"},
+		{"bippity", "boppity", "boo"},
+	}).Print()
+	assert.NotContains(t, buf.String(), "boo")
+}
+
 func TestTable_WithWidthFunc(t *testing.T) {
 	t.Parallel()
 
