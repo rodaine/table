@@ -123,6 +123,7 @@ type Table interface {
 	WithWidthFunc(f WidthFunc) Table
 
 	AddRow(vals ...interface{}) Table
+	SetRows(rows [][]string) Table
 	Print()
 }
 
@@ -199,6 +200,21 @@ func (t *table) AddRow(vals ...interface{}) Table {
 		row[i] = fmt.Sprint(val)
 	}
 	t.rows = append(t.rows, row)
+
+	return t
+}
+
+func (t *table) SetRows(rows [][]string) Table {
+	t.rows = [][]string{}
+	headerLength := len(t.header)
+
+	for _, row := range rows {
+		if len(row) > headerLength {
+			t.rows = append(t.rows, row[:headerLength])
+		} else {
+			t.rows = append(t.rows, row)
+		}
+	}
 
 	return t
 }
