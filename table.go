@@ -192,14 +192,21 @@ func (t *table) WithWidthFunc(f WidthFunc) Table {
 }
 
 func (t *table) AddRow(vals ...interface{}) Table {
-	row := make([]string, len(t.header))
-	for i, val := range vals {
-		if i >= len(t.header) {
-			break
-		}
-		row[i] = fmt.Sprint(val)
+	maxNumNewlines := 0
+	for _, val := range vals {
+		maxNumNewlines = max(strings.Count(fmt.Sprint(val), "\n"), maxNumNewlines)
 	}
-	t.rows = append(t.rows, row)
+	for i := 0; i <= maxNumNewlines; i++ {
+		row := make([]string, len(t.header))
+		for j, val := range vals {
+			if j >= len(t.header) {
+				break
+			}
+			v := strings.Split(fmt.Sprint(val), "\n")
+			row[j] = safeOffset(v, i)
+		}
+		t.rows = append(t.rows, row)
+	}
 
 	return t
 }
@@ -280,4 +287,18 @@ func (t *table) lenOffset(s string, w int) string {
 		return ""
 	}
 	return strings.Repeat(" ", l)
+}
+
+func max(i1, i2 int) int {
+	if i1 > i2 {
+		return i1
+	}
+	return i2
+}
+
+func safeOffset(sarr []string, idx int) string {
+	if idx >= len(sarr) {
+		return ""
+	}
+	return sarr[idx]
 }

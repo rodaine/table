@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/mattn/go-runewidth"
 	"github.com/stretchr/testify/assert"
 )
@@ -160,6 +161,59 @@ func TestTable_AddRow(t *testing.T) {
 	buf.Reset()
 	tbl.AddRow("bippity", "boppity", "boo").Print()
 	assert.NotContains(t, buf.String(), "boo")
+
+	// check the full table
+	buf.Reset()
+	tbl.Print()
+	expected := `foo      bar      
+fizz     buzz     
+                  
+cat               
+bippity  boppity  
+`
+	if diff := cmp.Diff(expected, buf.String()); diff != "" {
+		t.Fatalf("table mismatch (-expected +got):\n%s\nout=%#v", diff, buf.String())
+	}
+}
+
+func TestTable_AddRow_WithNewLines(t *testing.T) {
+	t.Parallel()
+
+	buf := bytes.Buffer{}
+	tbl := New("foo", "bar").WithWriter(&buf).AddRow("fizz", "buzz")
+
+	// Add some rows
+	tbl.AddRow()
+	tbl.AddRow("cat")
+
+	// add an entry that contains new lines
+	tbl.AddRow("bippity", "boppity\nboop")
+
+	// Add a couple more rows
+	tbl.AddRow("a", "b")
+	tbl.AddRow("c", "d")
+
+	// and another entry with more new lines
+	tbl.AddRow("1\n2", "x\ny\nz")
+
+	// check the full table
+	buf.Reset()
+	tbl.Print()
+	expected := `foo      bar      
+fizz     buzz     
+                  
+cat               
+bippity  boppity  
+         boop     
+a        b        
+c        d        
+1        x        
+2        y        
+         z        
+`
+	if diff := cmp.Diff(expected, buf.String()); diff != "" {
+		t.Fatalf("table mismatch (-expected +got):\n%s\nout=%#v", diff, buf.String())
+	}
 }
 
 func TestTable_SetRows(t *testing.T) {
