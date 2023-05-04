@@ -1,4 +1,4 @@
-# table <br/> [![GoDoc](https://godoc.org/github.com/rodaine/table?status.svg)](https://godoc.org/github.com/rodaine/table) [![Build Status](https://travis-ci.org/rodaine/table.svg)](https://travis-ci.org/rodaine/table)
+# table <br/> [![GoDoc](https://godoc.org/github.com/rodaine/table?status.svg)](https://godoc.org/github.com/rodaine/table)
 
 ![Example Table Output With ANSI Colors](http://res.cloudinary.com/rodaine/image/upload/v1442524799/go-table-example0.png)
 
