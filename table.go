@@ -6,23 +6,23 @@
 //
 // Source: https://github.com/rodaine/table
 //
-//   table.DefaultHeaderFormatter = func(format string, vals ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(format, vals...))
-//   }
+//	table.DefaultHeaderFormatter = func(format string, vals ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(format, vals...))
+//	}
 //
-//   tbl := table.New("ID", "Name", "Cost ($)")
+//	tbl := table.New("ID", "Name", "Cost ($)")
 //
-//   for _, widget := range Widgets {
-//     tbl.AddRow(widget.ID, widget.Name, widget.Cost)
-//   }
+//	for _, widget := range Widgets {
+//	  tbl.AddRow(widget.ID, widget.Name, widget.Cost)
+//	}
 //
-//   tbl.Print()
+//	tbl.Print()
 //
-//   // Output:
-//   // ID  NAME      COST ($)
-//   // 1   Foobar    1.23
-//   // 2   Fizzbuzz  4.56
-//   // 3   Gizmo     78.90
+//	// Output:
+//	// ID  NAME      COST ($)
+//	// 1   Foobar    1.23
+//	// 2   Fizzbuzz  4.56
+//	// 3   Gizmo     78.90
 package table
 
 import (
@@ -33,11 +33,20 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	LeftAlign Alignment = iota
+	CenterAlign
+	RightAlign
+)
+
 // These are the default properties for all Tables created from this package
 // and can be modified.
 var (
 	// DefaultPadding specifies the number of spaces between columns in a table.
 	DefaultPadding = 2
+
+	// DefaultAlignment specifies the horizontal alignment of each table's cells.
+	DefaultAlignment = LeftAlign
 
 	// DefaultWriter specifies the output io.Writer for the Table.Print method.
 	DefaultWriter io.Writer = os.Stdout
@@ -58,9 +67,9 @@ var (
 // column widths are calculated pre-formatting (though this issue can be mitigated
 // with increased padding).
 //
-//   tbl.WithHeaderFormatter(func(format string, vals ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(format, vals...))
-//   })
+//	tbl.WithHeaderFormatter(func(format string, vals ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(format, vals...))
+//	})
 //
 // A good use case for formatters is to use ANSI escape codes to color the cells
 // for a nicer interface. The package color (https://github.com/fatih/color) makes
@@ -73,6 +82,9 @@ type Formatter func(string, ...interface{}) string
 // accomodate multi-cell characters (such as emoji or CJK characters).
 type WidthFunc func(string) int
 
+// Alignment defines a horizontal alignment for each table's cells. By default, it's left-aligned.
+type Alignment int
+
 // Table describes the interface for building up a tabular representation of data.
 // It exposes fluent/chainable methods for convenient table building.
 //
@@ -80,20 +92,25 @@ type WidthFunc func(string) int
 // header and first column, respectively. If nil is passed in (the default), no
 // formatting will be applied.
 //
-//   New("foo", "bar").WithFirstColumnFormatter(func(f string, v ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(f, v...))
-//   })
+//	New("foo", "bar").WithFirstColumnFormatter(func(f string, v ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(f, v...))
+//	})
 //
 // WithPadding specifies the minimum padding between cells in a row and defaults
 // to DefaultPadding. Padding values less than or equal to zero apply no extra
 // padding between the columns.
 //
-//   New("foo", "bar").WithPadding(3)
+//	New("foo", "bar").WithPadding(3)
+//
+// WithAlignment specifies the horizontal alignment of each table's cells and
+// defaults to DefaultAlignment.
+//
+//	New("foo", "bar").WithAlignment(Center)
 //
 // WithWriter modifies the writer which Print outputs to, defaulting to DefaultWriter
 // when instantiated. If nil is passed, os.Stdout will be used.
 //
-//   New("foo", "bar").WithWriter(os.Stderr)
+//	New("foo", "bar").WithWriter(os.Stderr)
 //
 // WithWidthFunc sets the function used to calculate the width of the string in
 // a column. By default, the number of utf8 runes in the string is used.
@@ -105,12 +122,12 @@ type WidthFunc func(string) int
 // number of columns will be truncated. References to the data are not held, so
 // the passed in values can be modified without affecting the table's output.
 //
-//   New("foo", "bar").AddRow("fizz", "buzz").AddRow(time.Now()).AddRow(1, 2, 3).Print()
-//   // Output:
-//   // foo                              bar
-//   // fizz                             buzz
-//   // 2006-01-02 15:04:05.0 -0700 MST
-//   // 1                                2
+//	New("foo", "bar").AddRow("fizz", "buzz").AddRow(time.Now()).AddRow(1, 2, 3).Print()
+//	// Output:
+//	// foo                              bar
+//	// fizz                             buzz
+//	// 2006-01-02 15:04:05.0 -0700 MST
+//	// 1                                2
 //
 // Print writes the string representation of the table to the provided writer.
 // Print can be called multiple times, even after subsequent mutations of the
@@ -119,6 +136,7 @@ type Table interface {
 	WithHeaderFormatter(f Formatter) Table
 	WithFirstColumnFormatter(f Formatter) Table
 	WithPadding(p int) Table
+	WithAlignment(a Alignment) Table
 	WithWriter(w io.Writer) Table
 	WithWidthFunc(f WidthFunc) Table
 
@@ -134,6 +152,7 @@ func New(columnHeaders ...interface{}) Table {
 	t := table{header: make([]string, len(columnHeaders))}
 
 	t.WithPadding(DefaultPadding)
+	t.WithAlignment(DefaultAlignment)
 	t.WithWriter(DefaultWriter)
 	t.WithHeaderFormatter(DefaultHeaderFormatter)
 	t.WithFirstColumnFormatter(DefaultFirstColumnFormatter)
@@ -150,6 +169,7 @@ type table struct {
 	FirstColumnFormatter Formatter
 	HeaderFormatter      Formatter
 	Padding              int
+	Alignment            Alignment
 	Writer               io.Writer
 	Width                WidthFunc
 
@@ -174,6 +194,11 @@ func (t *table) WithPadding(p int) Table {
 	}
 
 	t.Padding = p
+	return t
+}
+
+func (t *table) WithAlignment(a Alignment) Table {
+	t.Alignment = a
 	return t
 }
 
@@ -276,7 +301,14 @@ func (t *table) calculateWidths() {
 func (t *table) applyWidths(row []string, widths []int) []interface{} {
 	out := make([]interface{}, len(row))
 	for i, s := range row {
-		out[i] = s + t.lenOffset(s, widths[i])
+		switch t.Alignment {
+		case LeftAlign:
+			out[i] = s + t.lenOffset(s, widths[i])
+		case RightAlign:
+			out[i] = t.lenOffset(s, widths[i]) + s
+		case CenterAlign:
+			out[i] = t.lenOffset(s, (widths[i]-t.Width(s))/2+t.Width(s)) + s + t.lenOffset(s, widths[i]-(widths[i]-t.Width(s))/2)
+		}
 	}
 	return out
 }
