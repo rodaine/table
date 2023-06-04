@@ -105,7 +105,7 @@ type Alignment int
 // WithAlignment specifies the horizontal alignment of each table's cells and
 // defaults to DefaultAlignment.
 //
-//	New("foo", "bar").WithAlignment(Center)
+//	New("foo", "bar").WithAlignment(CenterAlign)
 //
 // WithWriter modifies the writer which Print outputs to, defaulting to DefaultWriter
 // when instantiated. If nil is passed, os.Stdout will be used.
