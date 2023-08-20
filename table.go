@@ -101,6 +101,10 @@ type WidthFunc func(string) int
 // WithWidthFunc sets the function used to calculate the width of the string in
 // a column. By default, the number of utf8 runes in the string is used.
 //
+// WithPrintHeaders specifies whether if the headers of the table should be
+// printed or not, which might be useful if the output is being piped to other
+// processes. By default, they are printed.
+//
 // AddRow adds another row of data to the table. Any values can be passed in and
 // will be output as its string representation as described in the fmt standard
 // package. Rows can have less cells than the total number of columns in the table;
