@@ -50,6 +50,9 @@ var (
 
 	// DefaultWidthFunc specifies the default WidthFunc for calculating column widths
 	DefaultWidthFunc WidthFunc = utf8.RuneCountInString
+
+	// DefaultPrintHeaders specifies if headers should be printed
+	DefaultPrintHeaders = true
 )
 
 // Formatter functions expose a fmt.Sprintf signature that can be used to modify
@@ -122,6 +125,7 @@ type Table interface {
 	WithWriter(w io.Writer) Table
 	WithWidthFunc(f WidthFunc) Table
 	WithHeaderSeparatorRow(r rune) Table
+	WithPrintHeaders(b bool) Table
 
 	AddRow(vals ...interface{}) Table
 	SetRows(rows [][]string) Table
@@ -139,6 +143,7 @@ func New(columnHeaders ...interface{}) Table {
 	t.WithHeaderFormatter(DefaultHeaderFormatter)
 	t.WithFirstColumnFormatter(DefaultFirstColumnFormatter)
 	t.WithWidthFunc(DefaultWidthFunc)
+	t.WithPrintHeaders(DefaultPrintHeaders)
 
 	for i, col := range columnHeaders {
 		t.header[i] = fmt.Sprint(col)
@@ -154,6 +159,7 @@ type table struct {
 	Writer               io.Writer
 	Width                WidthFunc
 	HeaderSeparatorRune  rune
+	PrintHeaders         bool
 
 	header []string
 	rows   [][]string
@@ -198,6 +204,11 @@ func (t *table) WithWidthFunc(f WidthFunc) Table {
 	return t
 }
 
+func (t *table) WithPrintHeaders(b bool) Table {
+	t.PrintHeaders = b
+	return t
+}
+
 func (t *table) AddRow(vals ...interface{}) Table {
 	maxNumNewlines := 0
 	for _, val := range vals {
@@ -237,10 +248,14 @@ func (t *table) Print() {
 	format := strings.Repeat("%s", len(t.header)) + "\n"
 	t.calculateWidths()
 
-	t.printHeader(format)
-	if t.HeaderSeparatorRune != 0 {
-		t.printHeaderSeparator(format)
-	}
+  if t.PrintHeaders {
+    t.printHeader(format)
+
+    if t.HeaderSeparatorRune != 0 {
+      t.printHeaderSeparator(format)
+    }
+  }
+
 	for _, row := range t.rows {
 		t.printRow(format, row)
 	}
