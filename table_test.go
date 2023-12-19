@@ -113,6 +113,29 @@ func TestTable_WithPadding(t *testing.T) {
 	assert.Contains(t, out, "foobar")
 }
 
+func TestTable_WithAlignment(t *testing.T) {
+	t.Parallel()
+
+	// left value
+	buf := bytes.Buffer{}
+	tbl := New("foo", "bar").WithWriter(&buf).WithPadding(2).WithAlignment(LeftAlign)
+	tbl.Print()
+	out := buf.String()
+	assert.Contains(t, out, "foo  bar")
+
+	// right value
+	buf.Reset()
+	tbl.WithAlignment(RightAlign).Print()
+	out = buf.String()
+	assert.Contains(t, out, "  foo  bar")
+
+	// center value
+	buf.Reset()
+	tbl.WithAlignment(CenterAlign).Print()
+	out = buf.String()
+	assert.Contains(t, out, " foo  bar ")
+}
+
 func TestTable_WithWriter(t *testing.T) {
 	t.Parallel()
 
