@@ -268,3 +268,17 @@ func TestTable_WithWidthFunc(t *testing.T) {
 	assert.Contains(t, actual, "请求 alpha")
 	assert.Contains(t, actual, "abc  beta")
 }
+
+func TestTable_Sprint(t *testing.T) {
+	t.Parallel()
+
+	tbl := New("foo", "bar").SetRows([][]string{
+		{"fizz", "buzz"},
+		{"lorem", "ipsum"},
+	})
+	tbl.WithWriter(os.Stderr)
+	// Verify output correct
+	assert.Equal(t, "foo    bar    \nfizz   buzz   \nlorem  ipsum  \n", tbl.Sprint())
+	// Verify Writer was restored correctly
+	assert.Equal(t, os.Stderr, tbl.(*table).Writer)
+}
