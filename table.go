@@ -50,6 +50,9 @@ var (
 
 	// DefaultWidthFunc specifies the default WidthFunc for calculating column widths
 	DefaultWidthFunc WidthFunc = utf8.RuneCountInString
+
+	// DefaultPrintHeaders specifies if headers should be printed
+	DefaultPrintHeaders = true
 )
 
 // Formatter functions expose a fmt.Sprintf signature that can be used to modify
@@ -98,6 +101,10 @@ type WidthFunc func(string) int
 // WithWidthFunc sets the function used to calculate the width of the string in
 // a column. By default, the number of utf8 runes in the string is used.
 //
+// WithPrintHeaders specifies whether if the headers of the table should be
+// printed or not, which might be useful if the output is being piped to other
+// processes. By default, they are printed.
+//
 // AddRow adds another row of data to the table. Any values can be passed in and
 // will be output as its string representation as described in the fmt standard
 // package. Rows can have less cells than the total number of columns in the table;
@@ -121,6 +128,7 @@ type Table interface {
 	WithPadding(p int) Table
 	WithWriter(w io.Writer) Table
 	WithWidthFunc(f WidthFunc) Table
+	WithPrintHeaders(b bool) Table
 
 	AddRow(vals ...interface{}) Table
 	SetRows(rows [][]string) Table
@@ -138,6 +146,7 @@ func New(columnHeaders ...interface{}) Table {
 	t.WithHeaderFormatter(DefaultHeaderFormatter)
 	t.WithFirstColumnFormatter(DefaultFirstColumnFormatter)
 	t.WithWidthFunc(DefaultWidthFunc)
+	t.WithPrintHeaders(DefaultPrintHeaders)
 
 	for i, col := range columnHeaders {
 		t.header[i] = fmt.Sprint(col)
@@ -152,6 +161,7 @@ type table struct {
 	Padding              int
 	Writer               io.Writer
 	Width                WidthFunc
+	PrintHeaders         bool
 
 	header []string
 	rows   [][]string
@@ -188,6 +198,11 @@ func (t *table) WithWriter(w io.Writer) Table {
 
 func (t *table) WithWidthFunc(f WidthFunc) Table {
 	t.Width = f
+	return t
+}
+
+func (t *table) WithPrintHeaders(b bool) Table {
+	t.PrintHeaders = b
 	return t
 }
 
@@ -230,7 +245,10 @@ func (t *table) Print() {
 	format := strings.Repeat("%s", len(t.header)) + "\n"
 	t.calculateWidths()
 
-	t.printHeader(format)
+	if t.PrintHeaders {
+		t.printHeader(format)
+	}
+
 	for _, row := range t.rows {
 		t.printRow(format, row)
 	}
