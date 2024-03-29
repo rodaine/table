@@ -6,23 +6,23 @@
 //
 // Source: https://github.com/rodaine/table
 //
-//   table.DefaultHeaderFormatter = func(format string, vals ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(format, vals...))
-//   }
+//	table.DefaultHeaderFormatter = func(format string, vals ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(format, vals...))
+//	}
 //
-//   tbl := table.New("ID", "Name", "Cost ($)")
+//	tbl := table.New("ID", "Name", "Cost ($)")
 //
-//   for _, widget := range Widgets {
-//     tbl.AddRow(widget.ID, widget.Name, widget.Cost)
-//   }
+//	for _, widget := range Widgets {
+//	  tbl.AddRow(widget.ID, widget.Name, widget.Cost)
+//	}
 //
-//   tbl.Print()
+//	tbl.Print()
 //
-//   // Output:
-//   // ID  NAME      COST ($)
-//   // 1   Foobar    1.23
-//   // 2   Fizzbuzz  4.56
-//   // 3   Gizmo     78.90
+//	// Output:
+//	// ID  NAME      COST ($)
+//	// 1   Foobar    1.23
+//	// 2   Fizzbuzz  4.56
+//	// 3   Gizmo     78.90
 package table
 
 import (
@@ -58,9 +58,9 @@ var (
 // column widths are calculated pre-formatting (though this issue can be mitigated
 // with increased padding).
 //
-//   tbl.WithHeaderFormatter(func(format string, vals ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(format, vals...))
-//   })
+//	tbl.WithHeaderFormatter(func(format string, vals ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(format, vals...))
+//	})
 //
 // A good use case for formatters is to use ANSI escape codes to color the cells
 // for a nicer interface. The package color (https://github.com/fatih/color) makes
@@ -80,20 +80,20 @@ type WidthFunc func(string) int
 // header and first column, respectively. If nil is passed in (the default), no
 // formatting will be applied.
 //
-//   New("foo", "bar").WithFirstColumnFormatter(func(f string, v ...interface{}) string {
-//     return strings.ToUpper(fmt.Sprintf(f, v...))
-//   })
+//	New("foo", "bar").WithFirstColumnFormatter(func(f string, v ...interface{}) string {
+//	  return strings.ToUpper(fmt.Sprintf(f, v...))
+//	})
 //
 // WithPadding specifies the minimum padding between cells in a row and defaults
 // to DefaultPadding. Padding values less than or equal to zero apply no extra
 // padding between the columns.
 //
-//   New("foo", "bar").WithPadding(3)
+//	New("foo", "bar").WithPadding(3)
 //
 // WithWriter modifies the writer which Print outputs to, defaulting to DefaultWriter
 // when instantiated. If nil is passed, os.Stdout will be used.
 //
-//   New("foo", "bar").WithWriter(os.Stderr)
+//	New("foo", "bar").WithWriter(os.Stderr)
 //
 // WithWidthFunc sets the function used to calculate the width of the string in
 // a column. By default, the number of utf8 runes in the string is used.
@@ -105,12 +105,12 @@ type WidthFunc func(string) int
 // number of columns will be truncated. References to the data are not held, so
 // the passed in values can be modified without affecting the table's output.
 //
-//   New("foo", "bar").AddRow("fizz", "buzz").AddRow(time.Now()).AddRow(1, 2, 3).Print()
-//   // Output:
-//   // foo                              bar
-//   // fizz                             buzz
-//   // 2006-01-02 15:04:05.0 -0700 MST
-//   // 1                                2
+//	New("foo", "bar").AddRow("fizz", "buzz").AddRow(time.Now()).AddRow(1, 2, 3).Print()
+//	// Output:
+//	// foo                              bar
+//	// fizz                             buzz
+//	// 2006-01-02 15:04:05.0 -0700 MST
+//	// 1                                2
 //
 // Print writes the string representation of the table to the provided writer.
 // Print can be called multiple times, even after subsequent mutations of the
@@ -121,6 +121,7 @@ type Table interface {
 	WithPadding(p int) Table
 	WithWriter(w io.Writer) Table
 	WithWidthFunc(f WidthFunc) Table
+	WithHeaderSeparatorRow(r rune) Table
 
 	AddRow(vals ...interface{}) Table
 	SetRows(rows [][]string) Table
@@ -152,6 +153,7 @@ type table struct {
 	Padding              int
 	Writer               io.Writer
 	Width                WidthFunc
+	HeaderSeparatorRune  rune
 
 	header []string
 	rows   [][]string
@@ -160,6 +162,11 @@ type table struct {
 
 func (t *table) WithHeaderFormatter(f Formatter) Table {
 	t.HeaderFormatter = f
+	return t
+}
+
+func (t *table) WithHeaderSeparatorRow(r rune) Table {
+	t.HeaderSeparatorRune = r
 	return t
 }
 
@@ -231,8 +238,33 @@ func (t *table) Print() {
 	t.calculateWidths()
 
 	t.printHeader(format)
+	if t.HeaderSeparatorRune != 0 {
+		t.printHeaderSeparator(format)
+	}
 	for _, row := range t.rows {
 		t.printRow(format, row)
+	}
+}
+
+func (t *table) printHeaderSeparator(format string) {
+	separators := make([]string, len(t.header))
+	separatorRuneWidth := t.Width(string([]rune{t.HeaderSeparatorRune}))
+	for index, headerName := range t.header {
+		headerRuneCount := t.Width(headerName)
+		separatorLen := headerRuneCount / separatorRuneWidth
+		separator := make([]rune, separatorLen)
+		for i := 0; i < separatorLen; i++ {
+			separator[i] = t.HeaderSeparatorRune
+		}
+		separators[index] = string(separator)
+	}
+
+	vals := t.applyWidths(separators, t.widths)
+	if t.HeaderFormatter != nil {
+		txt := t.HeaderFormatter(format, vals...)
+		fmt.Fprint(t.Writer, txt)
+	} else {
+		fmt.Fprintf(t.Writer, format, vals...)
 	}
 }
 
