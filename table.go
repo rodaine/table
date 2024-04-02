@@ -248,12 +248,20 @@ func (t *table) Print() {
 
 func (t *table) printHeaderSeparator(format string) {
 	separators := make([]string, len(t.header))
-	separatorRuneWidth := t.Width(string([]rune{t.HeaderSeparatorRune}))
+
+	// The separator could be any unicode char. Since some chars take up more
+	// than one cell in a monospace context, we can get a number higher than 1
+	// here. Am example would be this emoji 🤣.
+	separatorCellWidth := t.Width(string([]rune{t.HeaderSeparatorRune}))
 	for index, headerName := range t.header {
-		headerRuneCount := t.Width(headerName)
-		separatorLen := headerRuneCount / separatorRuneWidth
-		separator := make([]rune, separatorLen)
-		for i := 0; i < separatorLen; i++ {
+		headerCellWidth := t.Width(headerName)
+		// Note that this might not be evenly divisble. In this case we'll get a
+		// separator that is at least 1 cell shorter than the header. This was
+		// an intentional design decision in order to prevent widening the cell
+		// or overstepping the column bounds.
+		repeatCharTimes := headerCellWidth / separatorCellWidth
+		separator := make([]rune, repeatCharTimes)
+		for i := 0; i < repeatCharTimes; i++ {
 			separator[i] = t.HeaderSeparatorRune
 		}
 		separators[index] = string(separator)
