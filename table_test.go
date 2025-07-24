@@ -18,7 +18,7 @@ func TestFormatter(t *testing.T) {
 
 	var formatter Formatter
 
-	fn := func(a string, b ...interface{}) string { return "" }
+	fn := func(_ string, _ ...interface{}) string { return "" }
 	f := Formatter(fn)
 
 	assert.IsType(t, formatter, f)
