@@ -26,6 +26,7 @@
 package table
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -134,6 +135,7 @@ type Table interface {
 	AddRow(vals ...interface{}) Table
 	SetRows(rows [][]string) Table
 	Print()
+	Sprint() string
 }
 
 // New creates a Table instance with the specified header(s) provided. The number
@@ -246,6 +248,15 @@ func (t *table) SetRows(rows [][]string) Table {
 	}
 
 	return t
+}
+
+func (t *table) Sprint() string {
+	previousWriter := t.Writer
+	buf := new(bytes.Buffer)
+	t.WithWriter(buf).Print()
+	result := buf.String()
+	t.WithWriter(previousWriter)
+	return result
 }
 
 func (t *table) Print() {
