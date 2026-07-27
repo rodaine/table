@@ -1,10 +1,10 @@
 module github.com/rodaine/table
 
-go 1.21
+go 1.23
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/mattn/go-runewidth v0.0.24
+	github.com/mattn/go-runewidth v0.0.27
 	github.com/stretchr/testify v1.11.1
 )
 
