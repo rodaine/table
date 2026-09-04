@@ -238,10 +238,13 @@ func (t *table) SetRows(rows [][]string) Table {
 	headerLength := len(t.header)
 
 	for _, row := range rows {
-		if len(row) > headerLength {
+		if len(row) >= headerLength {
 			t.rows = append(t.rows, row[:headerLength])
 		} else {
-			t.rows = append(t.rows, row)
+			// pad short rows so every column is rendered, matching AddRow
+			padded := make([]string, headerLength)
+			copy(padded, row)
+			t.rows = append(t.rows, padded)
 		}
 	}
 
