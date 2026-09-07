@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/mattn/go-runewidth v0.0.28
+	github.com/mattn/go-runewidth v0.0.29
 	github.com/stretchr/testify v1.12.1
 )
 
