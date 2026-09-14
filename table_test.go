@@ -309,3 +309,30 @@ func TestTable_WithWidthFunc(t *testing.T) {
 	assert.Contains(t, actual, "请求 alpha")
 	assert.Contains(t, actual, "abc  beta")
 }
+
+func TestSetRowsShortRowsPadded(t *testing.T) {
+	// SetRows must pad short rows like AddRow, not emit %!s(MISSING).
+	buf := &bytes.Buffer{}
+	tbl := New("A", "B", "C").WithWriter(buf).WithPadding(1)
+	tbl.SetRows([][]string{{"x", "y"}})
+	tbl.Print()
+
+	out := buf.String()
+	if strings.Contains(out, "MISSING") {
+		t.Fatalf("output contains missing-arg verb: %q", out)
+	}
+	assert.Equal(t, "A B C \nx y   \n", out)
+}
+
+func TestSetRowsEmptyRowWithFirstColumnFormatter(t *testing.T) {
+	// An empty row must not panic when a first-column formatter is set.
+	buf := &bytes.Buffer{}
+	tbl := New("A", "B").WithWriter(buf).WithPadding(1).
+		WithFirstColumnFormatter(func(f string, v ...interface{}) string {
+			return fmt.Sprintf(f, v...)
+		})
+	assert.NotPanics(t, func() {
+		tbl.SetRows([][]string{{}})
+		tbl.Print()
+	})
+}
