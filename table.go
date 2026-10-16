@@ -214,6 +214,10 @@ func (t *table) WithPrintHeaders(b bool) Table {
 }
 
 func (t *table) AddRow(vals ...interface{}) Table {
+	if len(vals) > len(t.header) {
+		vals = vals[:len(t.header)]
+	}
+
 	maxNumNewlines := 0
 	for _, val := range vals {
 		maxNumNewlines = max(strings.Count(fmt.Sprint(val), "\n"), maxNumNewlines)
@@ -221,9 +225,6 @@ func (t *table) AddRow(vals ...interface{}) Table {
 	for i := 0; i <= maxNumNewlines; i++ {
 		row := make([]string, len(t.header))
 		for j, val := range vals {
-			if j >= len(t.header) {
-				break
-			}
 			v := strings.Split(fmt.Sprint(val), "\n")
 			row[j] = safeOffset(v, i)
 		}
