@@ -176,6 +176,32 @@ bippity  boppity
 	}
 }
 
+func TestTable_AddRow_IgnoresExtraColumnNewlines(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		extras []interface{}
+	}{
+		{"no extra columns", nil},
+		{"single-line extra column", []interface{}{"ignored"}},
+		{"multiline extra column", []interface{}{"ignored\nline"}},
+		{"trailing newline in extra column", []interface{}{"ignored\n"}},
+		{"multiple extra columns", []interface{}{"ignored", "one\ntwo\nthree"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			values := append([]interface{}{"alpha", 1}, tc.extras...)
+			New("Name", "Count").WithWriter(&buf).AddRow(values...).Print()
+
+			const expected = "Name   Count  \nalpha  1      \n"
+			if diff := cmp.Diff(expected, buf.String()); diff != "" {
+				t.Fatalf("table mismatch (-expected +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestTable_WithHeaderSeparatorRow(t *testing.T) {
 	t.Parallel()
 
